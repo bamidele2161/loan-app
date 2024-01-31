@@ -1,12 +1,17 @@
-const dotenv = require("dotenv");
 const express = require("express");
+const app = express();
+const http = require("http");
+const bodyParser = require("body-parser");
 const path = require("path");
-const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
 const cors = require("cors");
+const router = require("./src/routes/router");
+const connectDB = require("./src/database/connection");
 // const readdirSync = require("fs").readFileSync;
 
 dotenv.config();
-const app = express();
+
 dotenv.config({ path: path.resolve(__dirname, "./.env") });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,22 +21,14 @@ app.use(
     origin: "*",
   })
 );
-
-//routes
-// readdirSync("./routes").map((r) => app.use("/", require("./routes/" + r)));
-
-//database
-// mongoose
-//   .connect(process.env.DATABASE_URL, {
-//     useNewUrlParser: true,
-//   })
-//   .then(() => console.log("Database connection established"))
-//   .catch((err) => console.log("error connecting to database", err));
+connectDB();
 
 app.get("/", (req, res) => {
-  res.send("Method not allowed");
-  logger.info({ message: "Testing the server" });
+  res.send("testing");
 });
+
+app.use("/api", router);
+
 const port = process.env.PORT || "8000";
 app.listen(port, () => {
   console.log("Port 8000 Active");
