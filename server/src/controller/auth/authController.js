@@ -2,7 +2,7 @@ const UserDB = require("../../model/auth/userModel");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../../utils/sendEmail");
 const otpGenerator = require("otp-generator");
-const generateToken = require("../../utils/index");
+const { generateToken, matchChecker } = require("../../utils/index");
 const axios = require("axios");
 
 exports.SignUp = async (req, res) => {
@@ -16,7 +16,7 @@ exports.SignUp = async (req, res) => {
     const findUser = await UserDB.findOne({ email: data.email });
 
     if (findUser) {
-      res.status(404).send({ error: "Email already exists" });
+      return res.status(404).json({ error: "Email already exists" });
     }
 
     const user = {
@@ -28,7 +28,7 @@ exports.SignUp = async (req, res) => {
     const createUser = await UserDB.create(user);
 
     if (!createUser) {
-      res.status(400).json({ error: "Error while creating user" });
+      return res.status(400).json({ error: "Error while creating user" });
     }
 
     sendEmail(
@@ -40,7 +40,7 @@ exports.SignUp = async (req, res) => {
 
     const userSecret = process.env.TOKEN_USER_SECRET;
     const token = generateToken({ id: createUser._id }, userSecret, "14d");
-    return res.status(200).send({
+    return res.status(200).json({
       data: {
         firstname: createUser.firstName,
         lastname: createUser.lastName,
@@ -52,7 +52,7 @@ exports.SignUp = async (req, res) => {
       message: "Account created successfully",
     });
   } catch (err) {
-    res.status(500).send({ message: err.message || "Something went wrong" });
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -61,10 +61,10 @@ exports.AddProfile = async (req, res) => {
     if (!req.body) return res.status(400).send({ message: "No Content" });
     const data = req.body;
 
-    const findUser = await UserDB.findOne({ email: data.email });
+    const findUserByEmail = await UserDB.findOne({ email: data.email });
 
-    if (!findUser) {
-      res.status(404).send({ error: "User not found" });
+    if (!findUserByEmail) {
+      return res.status(404).send({ error: "User not found" });
     }
 
     const user = {
@@ -73,28 +73,35 @@ exports.AddProfile = async (req, res) => {
       occupation: data.occupation,
       kinPhone: data.kinPhone,
     };
-    const UpdateUser = await UserDB.updateOne({ _id: findUser._id }, user);
+    const UpdateUser = await UserDB.updateOne(
+      { _id: findUserByEmail._id },
+      user
+    );
 
     if (!UpdateUser) {
-      res.status(400).json({ error: "Error while updating user" });
+      return res.status(400).json({ error: "Error while updating user" });
     }
+
+    const findUser = await UserDB.findOne({ email: data.email });
 
     return res.status(200).send({
       data: {
-        firstname: UpdateUser.firstName,
-        lastname: UpdateUser.lastName,
-        email: UpdateUser.email,
-        phone: UpdateUser.phone,
-        occupation: UpdateUser.occupation,
-        phone: UpdateUser.phone,
-        kinName: UpdateUser.kinName,
-        occupation: UpdateUser.occupation,
-        kinPhone: UpdateUser.kinPhone,
+        firstname: findUser.firstName,
+        lastname: findUser.lastName,
+        email: findUser.email,
+        phone: findUser.phone,
+        occupation: findUser.occupation,
+        phone: findUser.phone,
+        kinName: findUser.kinName,
+        occupation: findUser.occupation,
+        kinPhone: findUser.kinPhone,
       },
       message: "Account updated successfully",
     });
   } catch (err) {
-    res.status(500).send({ message: err.message || "Something went wrong" });
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
   }
 };
 
@@ -106,7 +113,7 @@ exports.AddAddress = async (req, res) => {
     const findUser = await UserDB.findOne({ email: data.email });
 
     if (!findUser) {
-      res.status(404).send({ error: "User not found" });
+      return res.status(404).send({ error: "User not found" });
     }
 
     const user = {
@@ -118,29 +125,32 @@ exports.AddAddress = async (req, res) => {
     const UpdateUser = await UserDB.updateOne({ _id: findUser._id }, user);
 
     if (!UpdateUser) {
-      res.status(400).json({ error: "Error while updating user" });
+      return res.status(400).json({ error: "Error while updating user" });
     }
 
+    const getUserData = await UserDB.findOne({ email: data.email });
     return res.status(200).send({
-      data: {
-        firstname: UpdateUser.firstName,
-        lastname: UpdateUser.lastName,
-        email: UpdateUser.email,
-        phone: UpdateUser.phone,
-        occupation: UpdateUser.occupation,
-        phone: UpdateUser.phone,
-        kinName: UpdateUser.kinName,
-        occupation: UpdateUser.occupation,
-        kinPhone: UpdateUser.kinPhone,
-        state: UpdateUser.state,
-        lga: UpdateUser.lga,
-        town: UpdateUser.town,
-        dob: UpdateUser.dob,
-      },
       message: "Account updated successfully",
+      data: {
+        firstname: getUserData.firstName,
+        lastname: getUserData.lastName,
+        email: getUserData.email,
+        phone: getUserData.phone,
+        occupation: getUserData.occupation,
+        phone: getUserData.phone,
+        kinName: getUserData.kinName,
+        occupation: getUserData.occupation,
+        kinPhone: getUserData.kinPhone,
+        state: getUserData.state,
+        lga: getUserData.lga,
+        town: getUserData.town,
+        dob: getUserData.dob,
+      },
     });
   } catch (err) {
-    res.status(500).send({ message: err.message || "Something went wrong" });
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
   }
 };
 
@@ -165,39 +175,33 @@ exports.VerifyBvn = async (req, res) => {
       lastname: data.lastname,
     };
 
-    try {
-      const res = await axios.post(url, payload, options);
+    const res = await axios.post(url, payload, options);
 
-      const verifyUrl = `https://api.flutterwave.com/v3/bvn/verifications/${res?.data?.data?.reference}`;
+    const verifyUrl = `https://api.flutterwave.com/v3/bvn/verifications/${res?.data?.data?.reference}`;
 
-      const token = process.env.FLW_SECRET_KEY;
+    const verifyOptions = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
 
-      const verifyOptions = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+    const response = await axios.get(verifyUrl, verifyOptions);
 
-      const response = await axios.get(verifyUrl, verifyOptions);
+    const user = {
+      bvn: data.bvn,
+    };
+    const UpdateUser = await UserDB.updateOne({ email: data.email }, user);
 
-      const user = {
-        bvn: data.bvn,
-      };
-      const UpdateUser = await UserDB.updateOne({ _id: findUser._id }, user);
-
-      if (!UpdateUser) {
-        res.status(400).json({ error: "Error while updating user" });
-      }
-
-      return res.status(200).send({
-        data: response?.data,
-        message: "Bvn verified successfully",
-      });
-    } catch (error) {
-      res.status(500).send({ message: err.message || "Something went wrong" });
+    if (!UpdateUser) {
+      return res.status(400).json({ error: "Error while updating user" });
     }
-  } catch (err) {
-    res.status(500).send({ message: err.message || "Something went wrong" });
+
+    return res.status(200).send({
+      message: "User verified successfully",
+    });
+  } catch (error) {
+    console.log("error", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -209,22 +213,24 @@ exports.SignIn = async (req, res) => {
     const findUser = await UserDB.findOne({ email: data.email });
 
     if (!findUser) {
-      res.status(404).send({ error: "User not found" });
+      return res.status(404).send({ error: "User not found" });
     }
 
     const comparePass = await matchChecker(data.password, findUser.password);
 
     if (!comparePass) {
-      res.status(404).send({ error: "Invalid credentials" });
+      return res.status(404).send({ error: "Invalid credentials" });
     }
 
     const userSecret = process.env.TOKEN_USER_SECRET;
-    const token = generateToken({ id: createUser._id }, userSecret, "14d");
+    const token = generateToken({ id: findUser._id }, userSecret, "14d");
     return res.status(200).send({
-      data: createUser,
+      findUser,
       message: "User login successfully",
     });
   } catch (err) {
-    res.status(500).send({ message: err.message || "Something went wrong" });
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
   }
 };
