@@ -1,29 +1,29 @@
 import { Button } from "@/components/ui/button";
 import React from "react";
-import UserDashboard from "../page";
 import TableComponent from "@/components/table";
-import Status from "@/components/status";
+import UserDashboard from "@/app/user/dashboard/page";
+import StaffStatus from "@/components/status/staffStatus";
 
-const Loan = () => {
-  const header = ["S/N", "Transaction ID", "Amount", "Date", "Time", "Status"];
+const Staff = () => {
+  const header = ["S/N", "Transaction ID", "Amount", "Date", "Time", "Action"];
 
   const body: any[] = [
     {
       receipt: 1,
       source: "46745667456",
       amount: 30000,
-      currency: "NGN",
       date: "12-05-2023",
       time: "8pm",
+      accountNumber: "1234567890",
       status: "Rejected",
     },
     {
       receipt: 2,
       source: "46745667456",
       amount: 30000,
-      currency: "NGN",
       date: "12-05-2023",
       time: "8pm",
+      accountNumber: "1234567890",
       status: "Approved",
     },
   ];
@@ -33,18 +33,24 @@ const Loan = () => {
     item.source,
     item.amount,
     item.date,
-    item.time,
-    <div
-      className="rounded-md flex align-center justify-center p-1"
-      style={{
-        background:
-          item?.status === "Approved"
-            ? "rgba(1, 178, 114, 0.2)"
-            : "rgba(231, 175, 164, 0.3)",
-        color: item?.status === "Approved" ? "green" : "red",
-      }}
-    >
-      {item?.status}
+    item.accountNumber,
+    <div className="right">
+      <div className="flex gap-2 items-center justify-center flex-row w-full">
+        <Button
+          variant="outline"
+          className="bg-white text-black "
+          type="submit"
+        >
+          Reject
+        </Button>
+        <Button
+          variant="outline"
+          className="bg-[#108E61] text-white"
+          type="submit"
+        >
+          Approve
+        </Button>
+      </div>
     </div>,
 
     item?.dateCreated?.slice(0, 10),
@@ -54,7 +60,7 @@ const Loan = () => {
     <UserDashboard>
       <div className="flex justify-between border-b w-full h-16 items-center px-10 py-4">
         <div className="left">
-          <h1 className="text-1xl">Loan</h1>
+          <h1 className="text-1xl">Loan Management</h1>
         </div>
         <div className="right">
           <div className="flex gap-6 items-center justify-center flex-row w-full">
@@ -75,7 +81,7 @@ const Loan = () => {
           </div>
         </div>
       </div>
-      <Status />
+      <StaffStatus />
       <TableComponent
         title="Transaction History"
         header={header}
@@ -85,4 +91,4 @@ const Loan = () => {
   );
 };
 
-export default Loan;
+export default Staff;
