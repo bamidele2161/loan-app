@@ -11,10 +11,12 @@ import { Form, FormField } from "@/components/ui/form";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { registerSchema, registerType } from "./constant";
+import { useRegisterMutation } from "@/api/auth/authService";
+import toast from "react-hot-toast";
 
 const signup = () => {
   const router = useRouter();
-
+  const [register] = useRegisterMutation();
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -28,9 +30,19 @@ const signup = () => {
   const onSubmit = async (values: registerType) => {
     console.log("checkkkk", values);
     try {
+      const response = await register(values).unwrap();
+      console.log(response);
+      if (response?.statusCode === 200) {
+        router.push("/auth/about");
+        toast.success(response?.message);
+        localStorage.setItem("userInfo", JSON.stringify(response?.data));
+      }
+
       console.log("submit");
-      router.push("/user/dashboard");
-    } catch (error) {}
+    } catch (error: any) {
+      toast.error(error?.data?.error);
+      console.log("error", error);
+    }
   };
 
   return (
