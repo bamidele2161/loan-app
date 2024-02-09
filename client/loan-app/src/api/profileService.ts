@@ -67,6 +67,29 @@ export const profileApi = createApi({
         body,
       }),
     }),
+
+    //requestLoan
+    requestLoan: builder.mutation<
+      any,
+      {
+        amount: string;
+        firstguarantor: string;
+        guarantoremail: string;
+        secguarantor: string;
+        secguarantoremail: string;
+        duration: string;
+        bankname: string;
+        accountname: string;
+        accountno: string;
+        bankStatement: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/request",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -76,4 +99,5 @@ export const {
   useVerifyBvnMutation,
   usePinMutation,
   useGetProfileMutation,
+  useRequestLoanMutation,
 } = profileApi;

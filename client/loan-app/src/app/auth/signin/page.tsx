@@ -11,10 +11,12 @@ import { loginSchema, loginType } from "./constant";
 import { useRouter } from "next/navigation";
 import { Form, FormField } from "@/components/ui/form";
 import { z } from "zod";
+import toast from "react-hot-toast";
+import { useLoginMutation } from "@/api/auth/authService";
 
 const signin = () => {
   const router = useRouter();
-
+const [login] = useLoginMutation()
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -25,10 +27,21 @@ const signin = () => {
 
   const onSubmit = async (values: loginType) => {
     console.log("checkkkk", values);
-    router.push("/user/dashboard");
+
     try {
+      const response = await login(values).unwrap();
+      console.log(response);
+      if (response?.statusCode === 200) {
+        router.push("/user/dashboard/loan");
+        toast.success(response?.message);
+        localStorage.setItem("userInfo", JSON.stringify(response?.data));
+      }
+
       console.log("submit");
-    } catch (error) {}
+    } catch (error: any) {
+      toast.error(error?.data?.error);
+      console.log("error", error);
+    }
   };
 
   return (
@@ -57,6 +70,7 @@ const signin = () => {
                 </div>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -65,11 +79,15 @@ const signin = () => {
                   <Label htmlFor="password" className="text-md">
                     password
                   </Label>
-                  <Input type="password" placeholder="password" {...field} />
+                  <Input
+                    type="password"
+                    id="password"
+                    placeholder="password"
+                    {...field}
+                  />
                 </div>
               )}
             />
-
             <Button
               type="submit"
               variant="outline"
@@ -97,7 +115,7 @@ const signin = () => {
         </Form>
       </div>
       <div className="right flex w-2/4 pr-8">
-        <Image src={image} alt="" className="w-full"  />
+        <Image src={image} alt="" className="w-full" />
       </div>
     </div>
   );

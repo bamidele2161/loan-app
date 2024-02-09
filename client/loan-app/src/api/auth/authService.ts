@@ -21,36 +21,15 @@ export const authApi = createApi({
       }),
     }),
 
-    // get reset token
-    getToken: builder.mutation<any, { username: string }>({
-      query: ({ username }) => ({
-        url: `/user/generate-reset-token?user=${username}`,
-        method: "GET",
-      }),
-    }),
-
-    //reset
-    resetUser: builder.mutation<any, { username: string; token: string }>({
+    //login
+    login: builder.mutation<any, { password: string; email: string }>({
       query: (body) => ({
-        url: "/user/reset-user",
+        url: "/login",
         method: "POST",
         body,
-      }),
-    }),
-
-    //logout all
-    logoutAll: builder.mutation<any, { username: string }>({
-      query: ({ username }) => ({
-        url: `/user/logout-all?username=${username}`,
-        method: "POST",
       }),
     }),
   }),
 });
 
-export const {
-  useRegisterMutation,
-  useGetTokenMutation,
-  useResetUserMutation,
-  useLogoutAllMutation,
-} = authApi;
+export const { useRegisterMutation, useLoginMutation } = authApi;

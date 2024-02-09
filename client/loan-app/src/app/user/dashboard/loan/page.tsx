@@ -1,10 +1,23 @@
+"use client";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import UserDashboard from "../page";
 import TableComponent from "@/components/table";
 import Status from "@/components/status";
+import { useRouter } from "next/navigation";
+import Modal from "@/components/modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Loan = () => {
+  const router = useRouter();
+  const [openModal, setOpenModal] = useState(false);
   const header = ["S/N", "Transaction ID", "Amount", "Date", "Time", "Status"];
 
   const body: any[] = [
@@ -50,6 +63,9 @@ const Loan = () => {
     item?.dateCreated?.slice(0, 10),
   ]);
 
+  const handleProceed = () => {
+    router.push("/user/dashboard/loan-request");
+  };
   return (
     <UserDashboard>
       <div className="flex justify-between border-b w-full h-16 items-center px-10 py-4">
@@ -70,7 +86,50 @@ const Loan = () => {
               className="bg-[#108E61] text-white"
               type="submit"
             >
-              Ask for loan
+              <Dialog>
+                <DialogTrigger>Ask for Loan </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-xl">
+                      Loan Information
+                    </DialogTitle>
+                    <DialogDescription>
+                      <ul className=" flex flex-col gap-6 mt-4">
+                        <li className="item">
+                          {" "}
+                          You cannot be granted, if you don't meet the normal
+                          requirements.
+                        </li>
+                        <li className="item">
+                          {" "}
+                          you need to upload a bank statement.
+                        </li>
+                        <li className="item">
+                          {" "}
+                          A background check will be done, within 12hrs. a loan
+                          can be rejected or approved
+                        </li>
+                        <li className="item">
+                          {" "}
+                          You have to earn more than #100,000 before you have
+                          access to 1 million and above loans.
+                        </li>
+                      </ul>
+
+                      <div className="flex justify-center align-center">
+                        <Button
+                          variant="outline"
+                          className="bg-[#108E61] text-white"
+                          type="submit"
+                          onClick={handleProceed}
+                        >
+                          Proceed
+                        </Button>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </Button>
           </div>
         </div>
