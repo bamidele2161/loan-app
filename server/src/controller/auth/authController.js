@@ -326,9 +326,7 @@ exports.Request = async (req, res) => {
   try {
     if (!req.body) return res.status(400).send({ message: "No Content" });
     const data = req.body;
-
-    const findUser = await UserDB.findOne({ email: data.email });
-    console.log(findUser);
+    const findUser = await UserDB.findOne({ email: data.userEmail });
     if (!findUser) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -365,6 +363,7 @@ exports.Request = async (req, res) => {
       statusCode: 200,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
