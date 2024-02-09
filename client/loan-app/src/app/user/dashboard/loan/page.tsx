@@ -5,7 +5,6 @@ import UserDashboard from "../page";
 import TableComponent from "@/components/table";
 import Status from "@/components/status";
 import { useRouter } from "next/navigation";
-import Modal from "@/components/modal";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +13,41 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useGetloanMutation } from "@/api/profileService";
+import toast from "react-hot-toast";
 
 const Loan = () => {
   const router = useRouter();
-  const [openModal, setOpenModal] = useState(false);
+  const [loanData] = useGetloanMutation();
+  const [userLoan, setUserData] = useState<any>([]);
   const header = ["S/N", "Transaction ID", "Amount", "Date", "Time", "Status"];
+  let emailValue: string;
+  if (typeof window !== "undefined") {
+    const userInfoJSON = localStorage.getItem("userInfo") as string;
+    const userInfo = userInfoJSON !== undefined && JSON.parse(userInfoJSON);
+    emailValue = userInfo.email;
+  }
+
+  const handleGetProfile = async () => {
+    const requiredData = {
+      email: emailValue,
+    };
+
+    try {
+      const response = await loanData(requiredData).unwrap();
+      console.log(response);
+      if (response?.statusCode === 200) {
+        setUserData(response?.data);
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.error);
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    handleGetProfile();
+  }, []);
 
   const body: any[] = [
     {
@@ -41,9 +70,9 @@ const Loan = () => {
     },
   ];
 
-  const newData = body?.map((item: any, index: number) => [
+  const draft = body?.map((item: any, index: number) => [
     index + 1,
-    item.source,
+    item._id,
     item.amount,
     item.date,
     item.time,
@@ -53,14 +82,46 @@ const Loan = () => {
         background:
           item?.status === "Approved"
             ? "rgba(1, 178, 114, 0.2)"
+            : item?.status === "Pending"
+            ? "rgba(215, 231, 164, 0.3)"
             : "rgba(231, 175, 164, 0.3)",
-        color: item?.status === "Approved" ? "green" : "red",
+        color:
+          item?.status === "Approved"
+            ? "green"
+            : item?.status === "Pending"
+            ? "yellow"
+            : "red",
       }}
     >
       {item?.status}
     </div>,
+  ]);
 
-    item?.dateCreated?.slice(0, 10),
+  const newData = userLoan?.map((item: any, index: number) => [
+    index + 1,
+    item._id,
+    item.amount,
+    item.createdAt.slice(0, 10),
+    item.createdAt.slice(14, 22),
+    <div
+      className="rounded-md flex align-center justify-center p-1"
+      style={{
+        background:
+          item?.status === "Approved"
+            ? "rgba(1, 178, 114, 0.2)"
+            : item?.status === "Pending"
+            ? "rgba(215, 231, 164, 0.3)"
+            : "rgba(231, 175, 164, 0.3)",
+        color:
+          item?.status === "Approved"
+            ? "green"
+            : item?.status === "Pending"
+            ? "orange"
+            : "red",
+      }}
+    >
+      {item?.status}
+    </div>,
   ]);
 
   const handleProceed = () => {
@@ -138,7 +199,7 @@ const Loan = () => {
       <TableComponent
         title="Transaction History"
         header={header}
-        body={newData}
+        body={newData ? newData : draft}
       />
     </UserDashboard>
   );

@@ -90,6 +90,15 @@ export const profileApi = createApi({
         body,
       }),
     }),
+
+    //getProfile
+    getloan: builder.mutation<any, { email: string }>({
+      query: (body) => ({
+        url: "/loandata",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -100,4 +109,5 @@ export const {
   usePinMutation,
   useGetProfileMutation,
   useRequestLoanMutation,
+  useGetloanMutation,
 } = profileApi;

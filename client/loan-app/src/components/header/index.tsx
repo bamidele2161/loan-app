@@ -26,7 +26,6 @@ const Header = () => {
       const response = await getProfile(requiredData).unwrap();
       console.log(response);
       if (response?.statusCode === 200) {
-        toast.success(response?.message);
         setUserData(response?.data);
       }
     } catch (error: any) {
