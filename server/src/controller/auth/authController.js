@@ -341,8 +341,9 @@ exports.Request = async (req, res) => {
       bankname: data.bankname,
       accountname: data.accountname,
       accountno: data.accountno,
-      userEmail: data.email,
+      userEmail: data.userEmail,
       bankStatement: data.bankStatement,
+      status: "Pending",
     };
     const createRequest = await LoanDB.create(request);
 
@@ -365,5 +366,25 @@ exports.Request = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+exports.GetLoanData = async (req, res) => {
+  try {
+    const email = req.body.email;
+
+    const getUserData = await LoanDB.find({ userEmail: email });
+    if (!getUserData) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    return res.status(200).send({
+      message: "User data fetched successfully",
+      data: getUserData,
+      statusCode: 200,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
   }
 };

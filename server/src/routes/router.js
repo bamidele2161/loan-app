@@ -11,5 +11,6 @@ route.post("/login", authController.SignIn);
 route.post("/pin", authController.AddPIn);
 route.post("/getProfile", authController.GetUserProfile);
 route.post("/request", authController.Request);
+route.post("/loandata", authController.GetLoanData);
 
 module.exports = route;
