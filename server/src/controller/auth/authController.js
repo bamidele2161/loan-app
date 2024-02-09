@@ -1,4 +1,5 @@
 const UserDB = require("../../model/auth/userModel");
+const LoanDB = require("../../model/auth/loanModel");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../../utils/sendEmail");
 const otpGenerator = require("otp-generator");
@@ -162,6 +163,12 @@ exports.VerifyBvn = async (req, res) => {
     if (!req.body) return res.status(400).send({ message: "No Content" });
     const data = req.body;
 
+    const findUser = await UserDB.findOne({ email: data.email });
+
+    if (!findUser) {
+      return res.status(404).send({ error: "User not found" });
+    }
+
     const url = "https://api.flutterwave.com//v3/bvn/verifications";
 
     const token = process.env.FLW_SECRET_KEY;
@@ -199,6 +206,13 @@ exports.VerifyBvn = async (req, res) => {
       return res.status(400).json({ error: "Error while updating user" });
     }
 
+    sendEmail(
+      { name: findUser.firstName },
+      findUser.email,
+      "Account Verification Successful!",
+      "../view/verify.ejs"
+    );
+
     return res.status(200).json({
       message: "User BVN verified successfully",
       statusCode: 200,
@@ -225,11 +239,11 @@ exports.SignIn = async (req, res) => {
     if (!comparePass) {
       return res.status(404).send({ error: "Invalid credentials" });
     }
-
     const userSecret = process.env.TOKEN_USER_SECRET;
     const token = generateToken({ id: findUser._id }, userSecret, "14d");
     return res.status(200).send({
-      findUser,
+      data: findUser,
+      token: token,
       message: "User login successfully",
       statusCode: 200,
     });
@@ -290,8 +304,7 @@ exports.AddPIn = async (req, res) => {
 
 exports.GetUserProfile = async (req, res) => {
   try {
-   
-    const email = req.body.email
+    const email = req.body.email;
 
     const getUserData = await UserDB.findOne({ email: email });
     if (!getUserData) {
@@ -306,5 +319,52 @@ exports.GetUserProfile = async (req, res) => {
     return res
       .status(500)
       .send({ message: err.message || "Something went wrong" });
+  }
+};
+
+exports.Request = async (req, res) => {
+  try {
+    if (!req.body) return res.status(400).send({ message: "No Content" });
+    const data = req.body;
+
+    const findUser = await UserDB.findOne({ email: data.email });
+    console.log(findUser);
+    if (!findUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const request = {
+      amount: data.amount,
+      firstguarantor: data.firstguarantor,
+      guarantoremail: data.guarantoremail,
+      secguarantor: data.secguarantor,
+      secguarantoremail: data.secguarantoremail,
+      duration: data.duration,
+      bankname: data.bankname,
+      accountname: data.accountname,
+      accountno: data.accountno,
+      userEmail: data.email,
+      bankStatement: data.bankStatement,
+    };
+    const createRequest = await LoanDB.create(request);
+
+    if (!createRequest) {
+      return res.status(400).json({ error: "Error while creating request" });
+    }
+
+    sendEmail(
+      { name: findUser.firstName },
+      findUser.email,
+      "Loan Requested Successfully",
+      "../view/registration.ejs"
+    );
+
+    return res.status(200).json({
+      data: createRequest,
+      message: "Loan Request successfully",
+      statusCode: 200,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
