@@ -62,7 +62,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       text: true,
     },
-    twon: {
+    town: {
+      type: String,
+      trim: true,
+      text: true,
+    },
+    transactionPin: {
       type: String,
       trim: true,
       text: true,

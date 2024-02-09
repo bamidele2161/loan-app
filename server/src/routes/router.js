@@ -8,5 +8,7 @@ route.post("/add-profile", authController.AddProfile);
 route.post("/add-address", authController.AddAddress);
 route.post("/verifybvn", authController.VerifyBvn);
 route.post("/login", authController.SignIn);
+route.post("/pin", authController.AddPIn);
+route.post("/getProfile", authController.GetUserProfile);
 
 module.exports = route;

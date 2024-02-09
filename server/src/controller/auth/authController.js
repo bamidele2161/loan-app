@@ -50,6 +50,7 @@ exports.SignUp = async (req, res) => {
         token: token,
       },
       message: "Account created successfully",
+      statusCode: 200,
     });
   } catch (err) {
     return res.status(500).json({ message: "Something went wrong" });
@@ -97,6 +98,7 @@ exports.AddProfile = async (req, res) => {
         kinPhone: findUser.kinPhone,
       },
       message: "Account updated successfully",
+      statusCode: 200,
     });
   } catch (err) {
     return res
@@ -146,6 +148,7 @@ exports.AddAddress = async (req, res) => {
         town: getUserData.town,
         dob: getUserData.dob,
       },
+      statusCode: 200,
     });
   } catch (err) {
     return res
@@ -175,9 +178,9 @@ exports.VerifyBvn = async (req, res) => {
       lastname: data.lastname,
     };
 
-    const res = await axios.post(url, payload, options);
+    const respon = await axios.post(url, payload, options);
 
-    const verifyUrl = `https://api.flutterwave.com/v3/bvn/verifications/${res?.data?.data?.reference}`;
+    const verifyUrl = `https://api.flutterwave.com/v3/bvn/verifications/${respon?.data?.data?.reference}`;
 
     const verifyOptions = {
       headers: {
@@ -196,8 +199,9 @@ exports.VerifyBvn = async (req, res) => {
       return res.status(400).json({ error: "Error while updating user" });
     }
 
-    return res.status(200).send({
-      message: "User verified successfully",
+    return res.status(200).json({
+      message: "User BVN verified successfully",
+      statusCode: 200,
     });
   } catch (error) {
     console.log("error", error);
@@ -227,6 +231,76 @@ exports.SignIn = async (req, res) => {
     return res.status(200).send({
       findUser,
       message: "User login successfully",
+      statusCode: 200,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
+  }
+};
+
+exports.AddPIn = async (req, res) => {
+  try {
+    if (!req.body) return res.status(400).send({ message: "No Content" });
+    const data = req.body;
+
+    const findUser = await UserDB.findOne({ email: data.email });
+
+    if (!findUser) {
+      return res.status(404).send({ error: "User not found" });
+    }
+
+    const user = {
+      transactionPin: data.transactionPin,
+    };
+    const UpdateUser = await UserDB.updateOne({ _id: findUser._id }, user);
+
+    if (!UpdateUser) {
+      return res.status(400).json({ error: "Error while updating user" });
+    }
+
+    const getUserData = await UserDB.findOne({ email: data.email });
+    return res.status(200).send({
+      message: "Transaction PIN added successfully",
+      data: {
+        firstname: getUserData.firstName,
+        lastname: getUserData.lastName,
+        email: getUserData.email,
+        phone: getUserData.phone,
+        occupation: getUserData.occupation,
+        phone: getUserData.phone,
+        kinName: getUserData.kinName,
+        occupation: getUserData.occupation,
+        kinPhone: getUserData.kinPhone,
+        state: getUserData.state,
+        lga: getUserData.lga,
+        town: getUserData.town,
+        dob: getUserData.dob,
+        transactionPin: getUserData.transactionPin,
+      },
+      statusCode: 200,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .send({ message: err.message || "Something went wrong" });
+  }
+};
+
+exports.GetUserProfile = async (req, res) => {
+  try {
+   
+    const email = req.body.email
+
+    const getUserData = await UserDB.findOne({ email: email });
+    if (!getUserData) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    return res.status(200).send({
+      message: "User data fetched successfully",
+      data: getUserData,
+      statusCode: 200,
     });
   } catch (err) {
     return res
