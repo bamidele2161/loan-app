@@ -89,8 +89,6 @@ const request = () => {
   }
 
   const onSubmit = async (values: updateType) => {
-    console.log("checkkkk", values);
-    toast.success("File Uploaded successfully");
     try {
       const requiredData = {
         amount: values.amount,
